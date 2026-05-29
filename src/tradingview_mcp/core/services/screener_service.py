@@ -479,13 +479,15 @@ def analyze_coin(
         compute_trade_setup,
         compute_trade_quality,
     )
-    from tradingview_mcp.core.utils.validators import is_stock_exchange, normalize_tradingview_symbol
+    from tradingview_mcp.core.utils.validators import is_stock_exchange, normalize_tradingview_symbol, resolve_screener_for_symbol
 
     if not _TA_AVAILABLE:
         return {"error": "tradingview_ta is missing; run `uv sync`."}
 
     full_symbol = normalize_tradingview_symbol(symbol, exchange)
-    screener = EXCHANGE_SCREENER.get(exchange, "crypto")
+    # Screener follows the RESOLVED symbol's venue (e.g. XAUUSD→TVC:GOLD→"cfd"),
+    # not the caller's exchange guess — see resolve_screener_for_symbol().
+    screener = resolve_screener_for_symbol(full_symbol, exchange)
 
     try:
         analysis = get_multiple_analysis(screener=screener, interval=timeframe, symbols=[full_symbol])
