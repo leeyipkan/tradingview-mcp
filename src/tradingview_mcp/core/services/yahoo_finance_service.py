@@ -120,9 +120,9 @@ def get_market_snapshot() -> dict:
     """
     groups = {
         "indices": ["^GSPC", "^DJI", "^IXIC", "^VIX"],
-        "crypto":  ["BTC-USD", "ETH-USD", "SOL-USD", "BNB-USD"],
-        "fx":      ["EURUSD=X", "GBPUSD=X", "JPYUSD=X"],
-        "etfs":    ["SPY", "QQQ", "GLD"],
+        "etfs":    ["SPY", "QQQ", "GLD", "SLV", "ARKK", "SOXX"],
+        "fx":      ["USDJPY=X", "EURUSD=X", "GBPUSD=X"],
+        "crypto":  ["BTC-USD", "ETH-USD"],
     }
 
     result = {}

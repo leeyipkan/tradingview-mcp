@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import statistics
 import urllib.request
 from datetime import datetime, timezone
@@ -428,6 +429,33 @@ def _buy_and_hold_return(candles: list[dict]) -> float:
     return round((candles[-1]["close"] - candles[0]["close"]) / candles[0]["close"] * 100, 2)
 
 
+def _save_result_to_json(result: dict):
+    """Saves the backtest result dictionary to a JSON file."""
+    try:
+        try:
+            # Go up 5 levels to get from /src/tradingview_mcp/core/services to the project root
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+        except NameError:
+            project_root = os.getcwd()
+
+        output_dir = os.path.join(project_root, "result")
+        os.makedirs(output_dir, exist_ok=True)
+
+        symbol = result.get("symbol", "unknown_symbol")
+        strategy = result.get("strategy")
+        if not strategy:
+            strategy = "comparison"
+            
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{symbol}_{strategy}_{timestamp}.json"
+        filepath = os.path.join(output_dir, filename)
+
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(result, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"[ERROR] Failed to save backtest result to JSON: {e}")
+
+
 # ─── Public API: run_backtest ─────────────────────────────────────────────────
 
 def run_backtest(
@@ -499,6 +527,7 @@ def run_backtest(
     if include_equity_curve:
         result["equity_curve"] = _build_equity_curve(trades, initial_capital)
 
+    _save_result_to_json(result)
     return result
 
 
@@ -558,7 +587,7 @@ def compare_strategies(
                     f"bars (use period='1y' or '2y') to produce signals; "
                     f"their zero-trade results below are not meaningful.")
 
-    return {
+    result = {
         "symbol":                  symbol.upper(),
         "period":                  period,
         "interval":                interval,
@@ -576,8 +605,9 @@ def compare_strategies(
         "disclaimer":              "Past performance does not guarantee future results.",
         "timestamp":               datetime.now(timezone.utc).isoformat(),
     }
-
-
+    _save_result_to_json(result)
+    return result
+    
 # ─── Public API: walk_forward_backtest ────────────────────────────────────────
 
 def walk_forward_backtest(
@@ -702,7 +732,7 @@ def walk_forward_backtest(
     else:
         verdict = "OVERFITTED — strategy fails out-of-sample, do not trade live"
 
-    return {
+    result = {
         "symbol":                  symbol.upper(),
         "strategy":                strategy,
         "strategy_label":          _STRATEGY_LABELS[strategy],
@@ -732,3 +762,5 @@ def walk_forward_backtest(
         "disclaimer":              "Past performance does not guarantee future results. For educational use only.",
         "timestamp":               datetime.now(timezone.utc).isoformat(),
     }
+    _save_result_to_json(result)
+    return result
