@@ -111,6 +111,9 @@ def get_prices_bulk(symbols: list[str]) -> list[dict]:
     return results
 
 
+from tradingview_mcp.core.utils.save_utils import save_result_to_json
+
+
 def get_market_snapshot() -> dict:
     """
     Get a snapshot of major market indices and crypto prices.
@@ -139,4 +142,5 @@ def get_market_snapshot() -> dict:
                 })
 
     result["timestamp"] = datetime.now(timezone.utc).isoformat()
+    save_result_to_json(result, "snapshot", "market")
     return result
